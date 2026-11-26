@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#23213e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>一日</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;color:#fff7f1;background:#23213e}
+*{box-sizing:border-box}
+body{margin:0;min-height:100svh;background:radial-gradient(ellipse at 78% 2%,#ad6977 0,transparent 53%),linear-gradient(170deg,#433657,#25233d 58%,#191b31);background-attachment:fixed}
+main{width:min(100%,480px);margin:auto;padding:max(28px,env(safe-area-inset-top)) 22px max(28px,env(safe-area-inset-bottom))}
+header{font-size:18px;font-weight:650;letter-spacing:.18em}
+.hero{padding:38px 0 28px;text-align:center}
+#date{font-size:16px;letter-spacing:.06em}
+#clock{font-size:clamp(76px,23vw,114px);font-weight:300;line-height:1.08;letter-spacing:-.07em;font-variant-numeric:tabular-nums;margin:4px 0 7px;display:block}
+#greeting{margin:0;color:#ffe5d6;font-size:16px}
+.card{border:1px solid #ffffff29;border-radius:24px;background:#201d36a0;padding:17px 19px;margin-bottom:12px}
+h2{margin:0;font-size:14px;font-weight:650;color:#ffddcb}
+.weather{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#condition{margin:7px 0 2px;font-size:16px}
+#range{margin:0;font-size:13px;color:#e9d6df}
+#temperature{font-size:36px;font-weight:350;white-space:nowrap}
+#events{list-style:none;padding:0;margin:0}
+#events li{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:8px;overflow-wrap:anywhere}
+#empty{font-size:14px;color:#e9d6df;margin:8px 0 0}
+form{display:flex;gap:8px;margin-top:10px}
+input,button,a{font:inherit}
+input{color:inherit;width:100%;min-width:0;padding:9px 11px;border:1px solid #ffffff45;border-radius:12px;background:#ffffff0c;font-size:16px}
+input::placeholder{color:#d8c8d1}
+button,a{min-height:44px;border-radius:12px}
+button{border:0;padding:0 13px;cursor:pointer;background:#ffcfb6;color:#2c2239;white-space:nowrap}
+.remove{background:#ffffff18;color:inherit;font-size:13px}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+a{display:grid;place-items:center;background:#ffffff15;border:1px solid #ffffff29;color:inherit;text-decoration:none;font-size:14px}
+:focus-visible{outline:2px solid #ffcfb6;outline-offset:2px}
+#storage-status{font-size:13px;margin:8px 0 0}
+.credit{text-align:right;color:#dfcad6;font-size:11px;margin:10px 0 0}
+.credit a{display:inline;min-height:0;border:0;background:none;font-size:inherit;text-decoration:underline}
+</style>
+</head>
+<body>
+<main>
+<header>一日</header>
+<section class="hero" aria-label="日付と時刻">
+  <div id="date"></div>
+  <time id="clock"></time>
+  <p id="greeting"></p>
+</section>
+<section class="card weather" aria-labelledby="weather-heading">
+  <div>
+    <h2 id="weather-heading">東京の天気</h2>
+    <p id="condition" role="status">取得中…</p>
+    <p id="range"></p>
+  </div>
+  <span id="temperature"></span>
+</section>
+<section class="card" aria-labelledby="schedule-heading">
+  <h2 id="schedule-heading">今日の予定</h2>
+  <p id="empty">予定はまだありません</p>
+  <ul id="events"></ul>
+  <form>
+    <input id="event" aria-label="今日の予定を入力" placeholder="予定を入力" maxlength="100" required>
+    <button type="submit">追加</button>
+  </form>
+  <p id="storage-status" role="status" hidden></p>
+</section>
+<nav aria-label="ショートカット">
+  <a href="https://calendar.google.com/">カレンダー</a>
+  <a href="https://loilonote.app/_/">ロイロノート</a>
+  <a href="https://www.google.com/maps">地図</a>
+</nav>
+<p class="credit">天気データ提供 <a href="https://open-meteo.com/">Open-Meteo</a></p>
+</main>
+<script>
+const byId = id => document.getElementById(id);
+const zone = 'Asia/Tokyo';
+const dateFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,month:'long',day:'numeric',weekday:'long'});
+const clockFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+const dayFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});
+const storageKey = 'home-schedule';
+let day = '';
+let events = [];
+
+function showEvents(){
+  byId('empty').hidden = events.length > 0;
+  byId('events').replaceChildren(...events.map((event,index)=>{
+    const item = document.createElement('li');
+    const label = document.createElement('span');
+    label.textContent = event;
+    const remove = document.createElement('button');
+    remove.textContent = '削除';
+    remove.className = 'remove';
+    remove.setAttribute('aria-label',event + 'を削除');
+    remove.addEventListener('click',()=>{
+      events.splice(index,1);
+      saveEvents();
+    });
+    item.append(label,remove);
+    return item;
+  }));
+}
+
+function storageUnavailable(){
+  const status = byId('storage-status');
+  status.hidden = false;
+  status.textContent = 'このブラウザでは、予定を閉じたあとに保存できません。';
+}
+
+function saveEvents(){
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({day,events}));
+  } catch {
+    storageUnavailable();
+  }
+  showEvents();
+}
+
+function updateClock(){
+  const now = new Date();
+  const time = clockFormat.format(now);
+  const hour = Number(time.slice(0,2));
+  byId('clock').textContent = time;
+  byId('clock').dateTime = time + '+09:00';
+  byId('date').textContent = dateFormat.format(now);
+  byId('greeting').textContent = hour < 11 ? 'おはようございます' : hour < 18 ? 'こんにちは' : 'こんばんは';
+  const today = dayFormat.format(now);
+  if (day === today) return;
+  day = today;
+  events = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey));
+    if (saved?.day === day && Array.isArray(saved.events)) events = saved.events.filter(value=>typeof value === 'string');
+  } catch {
+    storageUnavailable();
+  }
+  showEvents();
+}
+
+document.querySelector('form').addEventListener('submit',event=>{
+  event.preventDefault();
+  updateClock();
+  const input = byId('event');
+  const value = input.value.trim();
+  if (!value) return;
+  events.push(value);
+  input.value = '';
+  saveEvents();
+});
+
+function weatherLabel(code){
+  if (code === 0) return '快晴';
+  if (code <= 2) return '晴れ';
+  if (code === 3) return 'くもり';
+  if (code <= 48) return '霧';
+  if (code <= 67 || (code >= 80 && code <= 82)) return '雨';
+  if (code <= 86) return '雪';
+  return '雷雨';
+}
+
+async function updateWeather(){
+  const params = new URLSearchParams({
+    latitude:'35.68',longitude:'139.76',timezone:zone,forecast_days:'1',
+    current:'temperature_2m,weather_code',daily:'temperature_2m_min,temperature_2m_max'
+  });
+  try {
+    const response = await fetch('https://api.open-meteo.com/v1/forecast?' + params,{signal:AbortSignal.timeout(8000)});
+    if (!response.ok) throw new Error('Weather unavailable');
+    const {current,daily} = await response.json();
+    const values = [current.weather_code,current.temperature_2m,daily.temperature_2m_max[0],daily.temperature_2m_min[0]];
+    if (!values.every(Number.isFinite)) throw new Error('Incomplete weather');
+    const [code,temp,max,min] = values;
+    byId('condition').textContent = weatherLabel(code);
+    byId('temperature').textContent = Math.round(temp) + '℃';
+    byId('range').textContent = '最高 ' + Math.round(max) + '℃ ／ 最低 ' + Math.round(min) + '℃';
+  } catch {
+    byId('condition').textContent = '天気を取得できませんでした';
+    byId('temperature').textContent = '';
+    byId('range').textContent = '';
+  }
+}
+
+updateClock();
+setInterval(updateClock,1000);
+updateWeather();
+setInterval(updateWeather,15 * 60 * 1000);
+</script>
+</body>
+</html>
