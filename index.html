@@ -39,9 +39,6 @@ main{position:relative}
 main{width:min(100%,480px);margin:auto;padding:max(28px,env(safe-area-inset-top)) 22px max(28px,env(safe-area-inset-bottom))}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .brand{font-size:18px;font-weight:650;letter-spacing:.18em}
-.theme-control{display:flex;align-items:center;gap:7px;font-size:13px}
-.theme-control select{min-height:44px;padding:0 10px;border:1px solid #ffffff45;border-radius:12px;background:#221e38d9;color:inherit;font:inherit;font-size:16px}
-.theme-control select:focus-visible{outline:2px solid #ffcfb6;outline-offset:2px}
 .hero{padding:38px 0 28px;text-align:center}
 #date{font-size:16px;letter-spacing:.06em}
 #clock{font-size:clamp(76px,23vw,114px);font-weight:300;line-height:1.08;letter-spacing:-.07em;font-variant-numeric:tabular-nums;margin:4px 0 7px;display:block}
@@ -84,7 +81,24 @@ header .brand{margin-right:auto}
 .atlas-label{padding:8px;font-size:13px}
 .atlas-label strong{display:block}
 .atlas-label small{color:#ffddcb}
-@media(max-width:360px){header{gap:6px}.theme-control{gap:4px}#open-atlas{padding-inline:9px}}
+@media(max-width:360px){header{gap:6px}#open-atlas{padding-inline:9px}}
+[data-theme="lilac"]{--sky-top:#856685;--sky-bottom:#1b2038;--glow:#d8a8ce;--horizon:#856685;--orb:#ffe1bd;--orb-x:78%;--orb-y:15%;--stars:0}
+[data-theme="apricot"]{--sky-top:#724960;--sky-bottom:#1b2038;--glow:#efae87;--horizon:#724960;--orb:#ffe1bd;--orb-x:27%;--orb-y:15%;--stars:0}
+[data-theme="mint"]{--sky-top:#306b73;--sky-bottom:#1b2038;--glow:#87bca4;--horizon:#306b73;--orb:#ffe1bd;--orb-x:78%;--orb-y:15%;--stars:0}
+[data-theme="cobalt"]{--sky-top:#315189;--sky-bottom:#1b2038;--glow:#7ca9df;--horizon:#315189;--orb:#ffe1bd;--orb-x:27%;--orb-y:15%;--stars:0}
+[data-theme="coral"]{--sky-top:#713b63;--sky-bottom:#1b2038;--glow:#da827e;--horizon:#713b63;--orb:#ffe1bd;--orb-x:78%;--orb-y:30%;--stars:0}
+[data-theme="amber"]{--sky-top:#604455;--sky-bottom:#1b2038;--glow:#ce8d58;--horizon:#604455;--orb:#ffe1bd;--orb-x:27%;--orb-y:30%;--stars:0}
+[data-theme="teal"]{--sky-top:#23495b;--sky-bottom:#1b2038;--glow:#4a8993;--horizon:#23495b;--orb:#ffe1bd;--orb-x:78%;--orb-y:15%;--stars:.85}
+[data-theme="plum"]{--sky-top:#44315b;--sky-bottom:#1b2038;--glow:#956fac;--horizon:#44315b;--orb:#ffe1bd;--orb-x:27%;--orb-y:15%;--stars:.85}
+[data-theme="spring"]{--sky-top:#805375;--sky-bottom:#1b2038;--glow:#d89bb1;--horizon:#805375;--orb:#ffe1bd;--orb-x:78%;--orb-y:15%;--stars:0}
+[data-theme="summer"]{--sky-top:#305589;--sky-bottom:#1b2038;--glow:#7eb4e6;--horizon:#305589;--orb:#ffe1bd;--orb-x:27%;--orb-y:15%;--stars:0}
+[data-theme="autumn"]{--sky-top:#704734;--sky-bottom:#1b2038;--glow:#cb9764;--horizon:#704734;--orb:#ffe1bd;--orb-x:78%;--orb-y:30%;--stars:0}
+[data-theme="winter"]{--sky-top:#34466b;--sky-bottom:#1b2038;--glow:#8da5c4;--horizon:#34466b;--orb:#ffe1bd;--orb-x:27%;--orb-y:15%;--stars:.85}
+.atlas-filter{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:14px}
+.atlas-filter select{color:inherit;background:#343049;border:1px solid #ffffff45;border-radius:10px;padding:7px;font:inherit;min-height:44px}
+.atlas-label time{display:block;color:#e9d6df;font-size:11px}
+#next-sky{font-size:12px;margin:4px 0 0;color:#fff0e6}
+:is([data-theme="mint"],[data-theme="cobalt"],[data-theme="summer"]) .sky::after{opacity:.6;background:radial-gradient(ellipse at 10% 35%,#fff9,transparent 33%),radial-gradient(ellipse at 90% 51%,#fff6,transparent 41%)}
 </style>
 </head>
 <body data-theme="dawn">
@@ -93,21 +107,13 @@ header .brand{margin-right:auto}
 <header>
   <span class="brand">一日</span>
   <button id="open-atlas" type="button">図鑑</button>
-  <label class="theme-control">背景
-    <select id="theme">
-      <option value="auto">自動</option>
-      <option value="dawn">朝焼け</option>
-      <option value="day">昼の空</option>
-      <option value="dusk">夕焼け</option>
-      <option value="night">星空</option>
-    </select>
-  </label>
 </header>
 <section class="hero" aria-label="日付と時刻">
   <div id="date"></div>
   <time id="clock"></time>
   <p id="greeting"></p>
   <p id="sky-caption"></p>
+  <p id="next-sky"></p>
 </section>
 <section class="card weather" aria-labelledby="weather-heading">
   <div>
@@ -140,7 +146,16 @@ header .brand{margin-right:auto}
     <form method="dialog"><button type="submit">閉じる</button></form>
   </div>
   <p id="atlas-progress"></p>
-  <p id="atlas-help">背景を「自動」にして、時間や天気で現れた空を集めよう。</p>
+  <p id="atlas-help">時間と天気で現れた空を集めよう。季節限定の空は毎月1日・11日・21日に出会えます。春は朝、夏は昼、秋は夕方、冬は夜。</p>
+  <label class="atlas-filter">絞り込み
+    <select id="atlas-filter">
+      <option value="all">すべて</option>
+      <option value="found">発見済み</option>
+      <option value="missing">未発見</option>
+      <option value="special">レア・季節限定</option>
+    </select>
+  </label>
+  <p id="atlas-empty" hidden>該当する空はありません。</p>
   <ul id="atlas-list"></ul>
 </dialog>
 <script>
@@ -150,32 +165,25 @@ const dateFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,month:'long',d
 const clockFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 const dayFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});
 const storageKey = 'home-schedule';
-const themePicker = byId('theme');
-const themeStorageKey = 'home-theme';
-try {
-  const savedTheme = localStorage.getItem(themeStorageKey);
-  if (Array.from(themePicker.options).some(option => option.value === savedTheme)) {
-    themePicker.value = savedTheme;
-  }
-} catch {
-  // The picker still works for the current visit.
-}
-themePicker.addEventListener('change', () => {
-  try {
-    localStorage.setItem(themeStorageKey, themePicker.value);
-  } catch {
-    // Keep the selection for the current visit.
-  }
-  updateClock();
-});
-
 const skies = {
-  dawn: ['dawn','gold-dawn'],
-  day: ['day','sea-day'],
-  dusk: ['dusk','violet-dusk'],
-  night: ['night','indigo-night']
+  dawn: ['dawn','gold-dawn',"lilac","apricot"],
+  day: ['day','sea-day',"mint","cobalt"],
+  dusk: ['dusk','violet-dusk',"coral","amber"],
+  night: ['night','indigo-night',"teal","plum"]
 };
 const skyNames = {
+  lilac:'藤色の朝',
+  apricot:'杏色の朝',
+  mint:'ミント色の空',
+  cobalt:'コバルトの空',
+  coral:'珊瑚色の夕空',
+  amber:'琥珀の残照',
+  teal:'青緑の星夜',
+  plum:'紫水晶の月夜',
+  spring:'春の霞桜',
+  summer:'夏の入道雲',
+  autumn:'秋の黄金雲',
+  winter:'冬の銀月',
   dawn:'桃色の朝焼け', 'gold-dawn':'金色の朝焼け',
   day:'青空と薄雲', 'sea-day':'青緑の空',
   dusk:'茜色の夕焼け', 'violet-dusk':'すみれ色の夕暮れ',
@@ -183,16 +191,22 @@ const skyNames = {
   rain:'雨の空', fog:'霧の空', snow:'雪の空', storm:'雷雲の空'
 };
 const rarity = {
-  rain:'レア', fog:'スーパーレア', snow:'スーパーレア', storm:'ウルトラレア'
+  rain:'レア', fog:'スーパーレア', snow:'スーパーレア', storm:'ウルトラレア',
+  spring:'季節限定', summer:'季節限定', autumn:'季節限定', winter:'季節限定'
 };
 const atlasIds = [...Object.values(skies).flat(), ...Object.keys(rarity)];
 const atlasKey = 'home-sky-atlas';
 const atlas = byId('atlas');
-const foundSkies = new Set();
+const foundSkies = new Map();
 try {
   const savedSkies = JSON.parse(localStorage.getItem(atlasKey));
   if (Array.isArray(savedSkies)) {
-    savedSkies.filter(id => atlasIds.includes(id)).forEach(id => foundSkies.add(id));
+    savedSkies.filter(id => atlasIds.includes(id)).forEach(id => foundSkies.set(id,null));
+  } else if (savedSkies && typeof savedSkies === 'object') {
+    for (const id of atlasIds) {
+      const date = savedSkies[id];
+      if (date === null || (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date))) foundSkies.set(id,date);
+    }
   }
 } catch {
   // Discoveries remain available for the current visit.
@@ -200,7 +214,13 @@ try {
 
 function renderAtlas(){
   byId('atlas-progress').textContent = foundSkies.size + ' / ' + atlasIds.length + ' 種類発見';
-  byId('atlas-list').replaceChildren(...atlasIds.map(id => {
+  const filter = byId('atlas-filter').value;
+  const visible = atlasIds.filter(id =>
+    filter === 'all' || (filter === 'found' && foundSkies.has(id)) ||
+    (filter === 'missing' && !foundSkies.has(id)) || (filter === 'special' && rarity[id])
+  );
+  byId('atlas-empty').hidden = visible.length > 0;
+  byId('atlas-list').replaceChildren(...visible.map(id => {
     const found = foundSkies.has(id);
     const entry = document.createElement('li');
     entry.className = 'atlas-entry';
@@ -222,21 +242,30 @@ function renderAtlas(){
     const grade = document.createElement('small');
     grade.textContent = rarity[id] ?? 'ノーマル';
     label.append(name,grade);
+    const foundOn = foundSkies.get(id);
+    if (foundOn) {
+      const date = document.createElement('time');
+      date.dateTime = foundOn;
+      date.textContent = '初発見 ' + foundOn.replaceAll('-','/');
+      label.append(date);
+    }
     entry.append(swatch,label);
     return entry;
   }));
 }
 
-function discoverSky(id){
+function discoverSky(id, now){
   if (foundSkies.has(id)) return;
-  foundSkies.add(id);
+  foundSkies.set(id, new Date(now.getTime() + 32400000).toISOString().slice(0,10));
   try {
-    localStorage.setItem(atlasKey, JSON.stringify([...foundSkies]));
+    localStorage.setItem(atlasKey, JSON.stringify(Object.fromEntries(foundSkies)));
   } catch {
     // Discoveries remain available for the current visit.
   }
   if (atlas.open) renderAtlas();
 }
+
+byId('atlas-filter').addEventListener('change', renderAtlas);
 
 byId('open-atlas').addEventListener('click', () => {
   renderAtlas();
@@ -260,11 +289,20 @@ function weatherSky(code){
   return null;
 }
 
+const seasons = [
+  ['winter','night'], ['winter','night'], ['spring','dawn'], ['spring','dawn'], ['spring','dawn'],
+  ['summer','day'], ['summer','day'], ['summer','day'], ['autumn','dusk'], ['autumn','dusk'],
+  ['autumn','dusk'], ['winter','night']
+];
+
 function automaticSky(hour, timestamp, weather){
   const special = weather && timestamp < weather.expiresAt && weatherSky(weather.code);
   if (special) return special;
   const band = timeBand(hour);
-  const tokyoDay = Math.floor((timestamp + 9 * 60 * 60 * 1000) / 86400000);
+  const tokyoDate = new Date(timestamp + 32400000);
+  const [season, seasonBand] = seasons[tokyoDate.getUTCMonth()];
+  if (band === seasonBand && [1,11,21].includes(tokyoDate.getUTCDate())) return season;
+  const tokyoDay = Math.floor(tokyoDate.getTime() / 86400000);
   return skies[band][(tokyoDay + Object.keys(skies).indexOf(band)) % skies[band].length];
 }
 
@@ -309,9 +347,13 @@ function updateClock(){
   const now = new Date();
   const time = clockFormat.format(now);
   const hour = Number(time.slice(0,2));
-  const theme = themePicker.value === 'auto' ? automaticSky(hour, now.getTime(), weatherReading) : themePicker.value;
+  const theme = automaticSky(hour, now.getTime(), weatherReading);
   if (document.body.dataset.theme !== theme) document.body.dataset.theme = theme;
-  if (themePicker.value === 'auto') discoverSky(theme);
+  discoverSky(theme, now);
+  const nextTime = [5,10,16,19].find(boundary => boundary > hour) ?? 5;
+  const nextLabel = '次の時間帯 ' + (hour >= 19 ? '翌' : '') + nextTime + ':00';
+  const nextSky = byId('next-sky');
+  if (nextSky.textContent !== nextLabel) nextSky.textContent = nextLabel;
   const caption = byId('sky-caption');
   if (caption.textContent !== skyNames[theme]) caption.textContent = skyNames[theme];
   byId('clock').textContent = time;
