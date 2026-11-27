@@ -132,6 +132,20 @@ main{width:min(100%,960px);padding:max(14px,env(safe-area-inset-top)) clamp(14px
   .launcher nav{grid-template-columns:repeat(8,minmax(0,1fr))}
   .launcher nav a{font-size:14px}
 }
+
+#open-tools{background:#221e38d9;color:inherit;border:1px solid #ffffff45}
+#tools{width:min(calc(100% - 28px),480px);max-height:85svh;overflow:auto;border:1px solid #ffffff45;border-radius:24px;padding:18px;background:#201e35;color:inherit}
+#tools::backdrop{background:#110d23b5}
+#tools section{padding:12px 0;border-top:1px solid #ffffff26;margin-top:8px}
+#tools form input{width:auto;min-width:0}
+#tools select{color:inherit;background:#343049;border:1px solid #ffffff45;border-radius:10px;padding:8px;font:inherit}
+.tool-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tool-actions button{background:#ffffff19;color:inherit}
+#timer-display{display:block;font-variant-numeric:tabular-nums;font-size:36px;margin:4px 0}
+.tool-hint{font-size:12px;color:#e9d6df;margin:8px 0}
+#alarm-status,#tool-alert{margin:7px 0;font-size:14px}
+#tool-alert{color:#ffdec1;font-weight:650}
+#tool-sound{margin-top:6px}
 </style>
 </head>
 <body data-theme="dawn">
@@ -139,6 +153,7 @@ main{width:min(100%,960px);padding:max(14px,env(safe-area-inset-top)) clamp(14px
 <main>
 <header>
   <span class="brand">一日</span>
+  <button id="open-tools" type="button">ツール</button>
   <button id="open-atlas" type="button">図鑑</button>
 </header>
 <section class="hero" aria-label="日付と時刻">
@@ -205,6 +220,57 @@ main{width:min(100%,960px);padding:max(14px,env(safe-area-inset-top)) clamp(14px
   </label>
   <p id="atlas-empty" hidden>該当する空はありません。</p>
   <ul id="atlas-list"></ul>
+</dialog>
+
+<dialog id="tools" aria-labelledby="tools-title">
+  <div class="atlas-header">
+    <h2 id="tools-title">ツール</h2>
+    <form method="dialog"><button type="submit">閉じる</button></form>
+  </div>
+  <p class="tool-hint">音を鳴らすにはページを開いたままにしてください。端末のロック中や別のアプリを使用中は、音が遅れたり鳴らなかったりします。</p>
+  <p id="tool-alert" role="alert" hidden></p>
+  <button id="tool-sound" type="button" hidden>音を止める</button>
+  <section aria-labelledby="alarm-heading">
+    <h2 id="alarm-heading">アラーム（日本時間）</h2>
+    <form id="alarm-form">
+      <input id="alarm-time" type="time" aria-label="アラームの時刻" required>
+      <button type="submit">セット</button>
+      <button id="alarm-cancel" type="button">解除</button>
+    </form>
+    <p id="alarm-status" role="status"></p>
+  </section>
+  <section aria-labelledby="timer-heading">
+    <h2 id="timer-heading">カウントダウン</h2>
+    <output id="timer-display">00:00</output>
+    <div class="tool-actions" id="timer-presets">
+      <button type="button" data-minutes="1">1分</button>
+      <button type="button" data-minutes="3">3分</button>
+      <button type="button" data-minutes="5">5分</button>
+      <button type="button" data-minutes="25">25分</button>
+    </div>
+    <form id="timer-form">
+      <input id="timer-minutes" type="number" min="0" max="999" value="5" aria-label="分" required>
+      <span>分</span>
+      <input id="timer-seconds" type="number" min="0" max="59" value="0" aria-label="秒" required>
+      <span>秒</span>
+      <button type="submit">開始</button>
+    </form>
+    <div class="tool-actions">
+      <button id="timer-pause" type="button" disabled>一時停止</button>
+      <button id="timer-reset" type="button" disabled>リセット</button>
+    </div>
+  </section>
+  <section aria-labelledby="bgm-heading">
+    <h2 id="bgm-heading">BGM</h2>
+    <div class="tool-actions">
+      <select id="bgm-track" aria-label="BGMの曲">
+        <option value="morning">朝のピアノ風</option>
+        <option value="night">夜のアンビエント</option>
+      </select>
+      <button id="bgm-toggle" type="button" aria-pressed="false">再生</button>
+    </div>
+    <p id="bgm-status" class="tool-hint" role="status"></p>
+  </section>
 </dialog>
 <script>
 const byId = id => document.getElementById(id);
@@ -520,6 +586,223 @@ updateClock();
 setInterval(updateClock,1000);
 updateWeather();
 setInterval(updateWeather,15 * 60 * 1000);
+
+const toolsDialog = byId('tools');
+const toolsButton = byId('open-tools');
+const timerDisplay = byId('timer-display');
+const toolKey = 'home-clock-tools';
+const clockTools = {alarm:0, timerEnd:0, paused:0};
+try {
+  const saved = JSON.parse(localStorage.getItem(toolKey));
+  for (const key of Object.keys(clockTools)) {
+    if (Number.isFinite(saved?.[key]) && saved[key] > 0) clockTools[key] = saved[key];
+  }
+} catch {}
+
+function saveClockTools(){
+  try { localStorage.setItem(toolKey, JSON.stringify(clockTools)); } catch {}
+}
+
+function nextAlarm(time, now){
+  const [hour,minute] = time.split(':').map(Number);
+  const dayMs = 86400000;
+  const tokyoOffset = 32400000;
+  const midnight = Math.floor((now + tokyoOffset) / dayMs) * dayMs - tokyoOffset;
+  const target = midnight + (hour * 60 + minute) * 60000;
+  return target > now ? target : target + dayMs;
+}
+
+function remainingText(milliseconds){
+  const seconds = Math.ceil(Math.max(0,milliseconds) / 1000);
+  return String(Math.floor(seconds / 60)).padStart(2,'0') + ':' + String(seconds % 60).padStart(2,'0');
+}
+
+let soundContext;
+let ring = 0;
+let music = 0;
+let musicNote = 0;
+let musicVoices = [];
+const tracks = {
+  morning:[60,64,67,72,67,64,57,60,64,69,64,60,55,59,62,67],
+  night:[48,55,62,67,62,55,46,53,60,65,60,53,43,50,57,62]
+};
+
+function unlockSound(){
+  const Context = window.AudioContext || window.webkitAudioContext;
+  if (!Context) return;
+  try {
+    soundContext ??= new Context();
+    soundContext.resume().catch(() => {});
+  } catch {}
+}
+
+function playTone(note, offset, length, volume, wave = 'sine'){
+  if (soundContext?.state !== 'running') return;
+  const start = soundContext.currentTime + offset;
+  const oscillator = soundContext.createOscillator();
+  const gain = soundContext.createGain();
+  oscillator.type = wave;
+  oscillator.frequency.value = 440 * 2 ** ((note - 69) / 12);
+  gain.gain.setValueAtTime(0.0001,start);
+  gain.gain.exponentialRampToValueAtTime(volume,start + .025);
+  gain.gain.exponentialRampToValueAtTime(.0001,start + length);
+  oscillator.connect(gain).connect(soundContext.destination);
+  oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+  oscillator.start(start);
+  oscillator.stop(start + length);
+  return oscillator;
+}
+
+function stopRing(){
+  clearInterval(ring);
+  ring = 0;
+  byId('tool-sound').hidden = true;
+  toolsButton.textContent = 'ツール';
+}
+
+function alertClock(text){
+  const alert = byId('tool-alert');
+  alert.hidden = false;
+  alert.textContent = text;
+  toolsButton.textContent = 'ツール ●';
+  if (!toolsDialog.open && !byId('atlas').open) toolsDialog.showModal();
+  if (soundContext?.state === 'suspended') soundContext.resume().catch(() => {});
+  clearInterval(ring);
+  byId('tool-sound').hidden = false;
+  function chime(){
+    playTone(84,0,.28,.12);
+    playTone(88,.25,.35,.10);
+  }
+  chime();
+  let repeats = 0;
+  ring = setInterval(() => {
+    if (++repeats < 20) chime();
+    else stopRing();
+  },1300);
+}
+
+function updateClockTools(){
+  const now = Date.now();
+  const alarmDue = clockTools.alarm && now >= clockTools.alarm;
+  const timerDue = clockTools.timerEnd && now >= clockTools.timerEnd;
+  if (alarmDue || timerDue) {
+    if (alarmDue) clockTools.alarm = 0;
+    if (timerDue) clockTools.timerEnd = 0;
+    saveClockTools();
+    alertClock(alarmDue && timerDue ? 'アラーム・タイマー終了' : alarmDue ? 'アラームの時刻です' : 'タイマーが終了しました');
+  }
+  const alarmText = clockTools.alarm ? dateFormat.format(clockTools.alarm) + ' ' + clockFormat.format(clockTools.alarm) : '未設定';
+  const status = byId('alarm-status');
+  if (status.textContent !== alarmText) status.textContent = alarmText;
+  byId('alarm-cancel').disabled = !clockTools.alarm;
+  const remaining = clockTools.timerEnd ? clockTools.timerEnd - now : clockTools.paused;
+  const display = remainingText(remaining);
+  if (timerDisplay.textContent !== display) timerDisplay.textContent = display;
+  const pause = byId('timer-pause');
+  pause.disabled = !remaining;
+  pause.textContent = clockTools.paused ? '再開' : '一時停止';
+  byId('timer-reset').disabled = !remaining;
+}
+
+toolsButton.addEventListener('click', () => {
+  unlockSound();
+  if (!toolsDialog.open) toolsDialog.showModal();
+});
+byId('tool-sound').addEventListener('click',stopRing);
+byId('alarm-form').addEventListener('submit', event => {
+  event.preventDefault();
+  unlockSound();
+  clockTools.alarm = nextAlarm(byId('alarm-time').value, Date.now());
+  saveClockTools();
+  updateClockTools();
+});
+byId('alarm-cancel').addEventListener('click', () => {
+  clockTools.alarm = 0;
+  saveClockTools();
+  updateClockTools();
+});
+byId('timer-presets').addEventListener('click', event => {
+  const minutes = event.target.dataset.minutes;
+  if (!minutes) return;
+  byId('timer-minutes').value = minutes;
+  byId('timer-seconds').value = 0;
+  byId('timer-form').requestSubmit();
+});
+byId('timer-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const duration = (Number(byId('timer-minutes').value)*60 + Number(byId('timer-seconds').value))*1000;
+  if (!duration) return;
+  unlockSound();
+  clockTools.timerEnd = Date.now() + duration;
+  clockTools.paused = 0;
+  saveClockTools();
+  updateClockTools();
+});
+byId('timer-pause').addEventListener('click', () => {
+  unlockSound();
+  if (clockTools.paused) {
+    clockTools.timerEnd = Date.now() + clockTools.paused;
+    clockTools.paused = 0;
+  } else {
+    clockTools.paused = Math.max(0,clockTools.timerEnd - Date.now());
+    clockTools.timerEnd = 0;
+  }
+  saveClockTools();
+  updateClockTools();
+});
+byId('timer-reset').addEventListener('click', () => {
+  clockTools.timerEnd = clockTools.paused = 0;
+  saveClockTools();
+  updateClockTools();
+});
+
+const bgmButton = byId('bgm-toggle');
+function stopMusic(){
+  clearInterval(music);
+  music = 0;
+  for (const voice of musicVoices) { try { voice.stop(); } catch {} }
+  musicVoices = [];
+  bgmButton.textContent = '再生';
+  bgmButton.setAttribute('aria-pressed','false');
+}
+
+bgmButton.addEventListener('click', async () => {
+  if (music) { stopMusic(); return; }
+  unlockSound();
+  if (!soundContext) {
+    byId('bgm-status').textContent = 'このブラウザは音声再生に対応していません。';
+    return;
+  }
+  try { await soundContext.resume(); }
+  catch {
+    byId('bgm-status').textContent = '音声を再生できませんでした。';
+    return;
+  }
+  if (music) return;
+  byId('bgm-status').textContent = '';
+  musicNote = 0;
+  function playMusic(){
+    const track = byId('bgm-track').value;
+    const notes = tracks[track];
+    const note = notes[musicNote++ % notes.length];
+    musicVoices = musicVoices.filter(voice => voice.endsAt > soundContext.currentTime);
+    const length = track === 'morning' ? .9 : 1.8;
+    const voice = playTone(note,0,length,.045,track === 'morning' ? 'triangle' : 'sine');
+    if (voice) {
+      voice.endsAt = soundContext.currentTime + length;
+      musicVoices.push(voice);
+    }
+  }
+  playMusic();
+  music = setInterval(playMusic,620);
+  bgmButton.textContent = '停止';
+  bgmButton.setAttribute('aria-pressed','true');
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) updateClockTools();
+});
+updateClockTools();
+setInterval(updateClockTools,250);
 </script>
 </body>
 </html>
