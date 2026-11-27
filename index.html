@@ -11,7 +11,8 @@
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;color:#fff7f1;background:#23213e}
 *{box-sizing:border-box}
-body{margin:0;min-height:100svh;isolation:isolate;--sky-top:#674b70;--sky-bottom:#21203a;--glow:#c4808b;--horizon:#a95d67;--orb:#ffd0a4;--orb-x:78%;--orb-y:16%;--stars:0;background:var(--sky-bottom)}
+body{margin:0;min-height:100svh;isolation:isolate;background:var(--sky-bottom)}
+[data-theme]{--sky-top:#674b70;--sky-bottom:#21203a;--glow:#c4808b;--horizon:#a95d67;--orb:#ffd0a4;--orb-x:78%;--orb-y:16%;--stars:0}
 [data-theme="day"]{--sky-top:#275780;--sky-bottom:#172b51;--glow:#649eb2;--horizon:#347b8c;--orb:#fff6d1;--orb-x:80%;--orb-y:9%}
 [data-theme="dusk"]{--sky-top:#493660;--sky-bottom:#231c39;--glow:#a45c82;--horizon:#b66b60;--orb:#ffb379;--orb-x:78%;--orb-y:29%}
 [data-theme="night"]{--sky-top:#222b55;--sky-bottom:#11162f;--glow:#465382;--horizon:#343464;--orb:#dde4fb;--orb-x:77%;--orb-y:13%;--stars:.7}
@@ -26,12 +27,12 @@ body{margin:0;min-height:100svh;isolation:isolate;--sky-top:#674b70;--sky-bottom
 [data-theme="fog"]{--sky-top:#545b73;--sky-bottom:#2a304a;--glow:#9193aa;--horizon:#67748c}
 [data-theme="snow"]{--sky-top:#48637f;--sky-bottom:#263553;--glow:#8ea9c5;--horizon:#7086a2}
 [data-theme="storm"]{--sky-top:#35294d;--sky-bottom:#18152e;--glow:#7d659c;--horizon:#4e416f}
-:is([data-theme="rain"],[data-theme="fog"],[data-theme="snow"],[data-theme="storm"]) .sky::before{background:none}
-:is([data-theme="rain"],[data-theme="storm"]) .sky::after{opacity:.25;background:repeating-linear-gradient(112deg,transparent 0 20px,#dbe9ff55 21px,transparent 23px 40px);mask-image:linear-gradient(#000,transparent 85%)}
-[data-theme="storm"] .sky::before{background:radial-gradient(ellipse at 72% 24%,#c9a5ff88,transparent 36%);mask-image:none}
-[data-theme="fog"] .sky::after{opacity:.6;background:radial-gradient(ellipse at 10% 45%,#e0e2ec65,transparent 40%),radial-gradient(ellipse at 85% 64%,#e0e2ec76,transparent 48%)}
-[data-theme="snow"] .sky::after{opacity:.72;background:radial-gradient(circle,#fff 0 1px,transparent 2.5px) 0 0/61px 79px,radial-gradient(circle,#dbecff 0 2px,transparent 3.5px) 24px 14px/109px 127px}
-:is([data-theme="day"],[data-theme="sea-day"]) .sky::after{opacity:.48;background:radial-gradient(ellipse at 12% 29%,#ddf1ff88,transparent 27%),radial-gradient(ellipse at 87% 48%,#ddf1ff55,transparent 35%)}
+:is([data-theme="rain"],[data-theme="fog"],[data-theme="snow"],[data-theme="storm"]) > .sky::before{background:none}
+:is([data-theme="rain"],[data-theme="storm"]) > .sky::after{opacity:.25;background:repeating-linear-gradient(112deg,transparent 0 20px,#dbe9ff55 21px,transparent 23px 40px);mask-image:linear-gradient(#000,transparent 85%)}
+[data-theme="storm"] > .sky::before{background:radial-gradient(ellipse at 72% 24%,#c9a5ff88,transparent 36%);mask-image:none}
+[data-theme="fog"] > .sky::after{opacity:.6;background:radial-gradient(ellipse at 10% 45%,#e0e2ec65,transparent 40%),radial-gradient(ellipse at 85% 64%,#e0e2ec76,transparent 48%)}
+[data-theme="snow"] > .sky::after{opacity:.72;background:radial-gradient(circle,#fff 0 1px,transparent 2.5px) 0 0/61px 79px,radial-gradient(circle,#dbecff 0 2px,transparent 3.5px) 24px 14px/109px 127px}
+:is([data-theme="day"],[data-theme="sea-day"]) > .sky::after{opacity:.48;background:radial-gradient(ellipse at 12% 29%,#ddf1ff88,transparent 27%),radial-gradient(ellipse at 87% 48%,#ddf1ff55,transparent 35%)}
 #sky-caption{min-height:1.35em;margin:6px 0 0;color:#fff0e6;font-size:13px}
 main{position:relative}
 .hero{text-shadow:0 2px 14px #17142c}
@@ -98,7 +99,7 @@ header .brand{margin-right:auto}
 .atlas-filter select{color:inherit;background:#343049;border:1px solid #ffffff45;border-radius:10px;padding:7px;font:inherit;min-height:44px}
 .atlas-label time{display:block;color:#e9d6df;font-size:11px}
 #next-sky{font-size:12px;margin:4px 0 0;color:#fff0e6}
-:is([data-theme="mint"],[data-theme="cobalt"],[data-theme="summer"]) .sky::after{opacity:.6;background:radial-gradient(ellipse at 10% 35%,#fff9,transparent 33%),radial-gradient(ellipse at 90% 51%,#fff6,transparent 41%)}
+:is([data-theme="mint"],[data-theme="cobalt"],[data-theme="summer"]) > .sky::after{opacity:.6;background:radial-gradient(ellipse at 10% 35%,#fff9,transparent 33%),radial-gradient(ellipse at 90% 51%,#fff6,transparent 41%)}
 #web-search{margin-bottom:12px}
 #location-button{margin-top:8px;background:#ffffff18;color:inherit;font-size:13px}
 #location-status{margin:5px 0 0;font-size:12px;color:#e9d6df}
