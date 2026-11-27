@@ -18,6 +18,21 @@ body[data-theme="night"]{--sky-top:#222b55;--sky-bottom:#11162f;--glow:#465382;-
 .sky{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:radial-gradient(ellipse at var(--orb-x) var(--orb-y),var(--glow),transparent 53%),radial-gradient(ellipse at 15% 61%,var(--horizon),transparent 54%),linear-gradient(165deg,var(--sky-top),var(--sky-bottom) 78%)}
 .sky::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--orb-x) var(--orb-y),var(--orb) 0 24px,transparent 26px);opacity:.68;mask-image:linear-gradient(#000,transparent 65%)}
 .sky::after{content:"";position:absolute;inset:0;opacity:var(--stars);background:radial-gradient(circle at 12% 18%,#fff 0 1px,transparent 2px),radial-gradient(circle at 27% 7%,#fff 0 1px,transparent 2px),radial-gradient(circle at 59% 17%,#fff 0 1px,transparent 2px),radial-gradient(circle at 86% 23%,#fff 0 1px,transparent 2px),radial-gradient(circle at 93% 8%,#fff 0 1px,transparent 2px)}
+body[data-theme="gold-dawn"]{--sky-top:#664e63;--sky-bottom:#2e2235;--glow:#d89977;--horizon:#b77c66;--orb:#ffe6ac;--orb-x:27%;--orb-y:22%}
+body[data-theme="sea-day"]{--sky-top:#225c67;--sky-bottom:#132e49;--glow:#5a9f98;--horizon:#358996;--orb:#fff4d2;--orb-x:66%;--orb-y:10%}
+body[data-theme="violet-dusk"]{--sky-top:#4b365f;--sky-bottom:#201c3d;--glow:#9770b1;--horizon:#ac637e;--orb:#ffd0aa;--orb-x:30%;--orb-y:32%}
+body[data-theme="indigo-night"]{--sky-top:#30365b;--sky-bottom:#14182e;--glow:#6c528c;--horizon:#385f80;--orb:#e6dcfa;--orb-x:25%;--orb-y:14%;--stars:.85}
+body[data-theme="rain"]{--sky-top:#384562;--sky-bottom:#171f38;--glow:#6e7d9a;--horizon:#3c5975}
+body[data-theme="fog"]{--sky-top:#545b73;--sky-bottom:#2a304a;--glow:#9193aa;--horizon:#67748c}
+body[data-theme="snow"]{--sky-top:#48637f;--sky-bottom:#263553;--glow:#8ea9c5;--horizon:#7086a2}
+body[data-theme="storm"]{--sky-top:#35294d;--sky-bottom:#18152e;--glow:#7d659c;--horizon:#4e416f}
+:is([data-theme="rain"],[data-theme="fog"],[data-theme="snow"],[data-theme="storm"]) .sky::before{background:none}
+:is([data-theme="rain"],[data-theme="storm"]) .sky::after{opacity:.25;background:repeating-linear-gradient(112deg,transparent 0 20px,#dbe9ff55 21px,transparent 23px 40px);mask-image:linear-gradient(#000,transparent 85%)}
+[data-theme="storm"] .sky::before{background:radial-gradient(ellipse at 72% 24%,#c9a5ff88,transparent 36%);mask-image:none}
+[data-theme="fog"] .sky::after{opacity:.6;background:radial-gradient(ellipse at 10% 45%,#e0e2ec65,transparent 40%),radial-gradient(ellipse at 85% 64%,#e0e2ec76,transparent 48%)}
+[data-theme="snow"] .sky::after{opacity:.72;background:radial-gradient(circle,#fff 0 1px,transparent 2.5px) 0 0/61px 79px,radial-gradient(circle,#dbecff 0 2px,transparent 3.5px) 24px 14px/109px 127px}
+:is([data-theme="day"],[data-theme="sea-day"]) .sky::after{opacity:.48;background:radial-gradient(ellipse at 12% 29%,#ddf1ff88,transparent 27%),radial-gradient(ellipse at 87% 48%,#ddf1ff55,transparent 35%)}
+#sky-caption{min-height:1.35em;margin:6px 0 0;color:#fff0e6;font-size:13px}
 main{position:relative}
 .hero{text-shadow:0 2px 14px #17142c}
 
@@ -74,6 +89,7 @@ a{display:grid;place-items:center;background:#ffffff15;border:1px solid #ffffff2
   <div id="date"></div>
   <time id="clock"></time>
   <p id="greeting"></p>
+  <p id="sky-caption"></p>
 </section>
 <section class="card weather" aria-labelledby="weather-heading">
   <div>
@@ -126,11 +142,42 @@ themePicker.addEventListener('change', () => {
   updateClock();
 });
 
-function themeForHour(hour){
+const skies = {
+  dawn: ['dawn','gold-dawn'],
+  day: ['day','sea-day'],
+  dusk: ['dusk','violet-dusk'],
+  night: ['night','indigo-night']
+};
+const skyNames = {
+  dawn:'桃色の朝焼け', 'gold-dawn':'金色の朝焼け',
+  day:'青空と薄雲', 'sea-day':'青緑の空',
+  dusk:'茜色の夕焼け', 'violet-dusk':'すみれ色の夕暮れ',
+  night:'月と星', 'indigo-night':'藍色の星空',
+  rain:'雨の空', fog:'霧の空', snow:'雪の空', storm:'雷雲の空'
+};
+let weatherReading = null;
+
+function timeBand(hour){
   if (hour >= 5 && hour < 10) return 'dawn';
   if (hour >= 10 && hour < 16) return 'day';
   if (hour >= 16 && hour < 19) return 'dusk';
   return 'night';
+}
+
+function weatherSky(code){
+  if ([95,96,99].includes(code)) return 'storm';
+  if ([71,73,75,77,85,86].includes(code)) return 'snow';
+  if ([45,48].includes(code)) return 'fog';
+  if ([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)) return 'rain';
+  return null;
+}
+
+function automaticSky(hour, timestamp, weather){
+  const special = weather && timestamp < weather.expiresAt && weatherSky(weather.code);
+  if (special) return special;
+  const band = timeBand(hour);
+  const tokyoDay = Math.floor((timestamp + 9 * 60 * 60 * 1000) / 86400000);
+  return skies[band][(tokyoDay + Object.keys(skies).indexOf(band)) % skies[band].length];
 }
 
 let day = '';
@@ -174,8 +221,10 @@ function updateClock(){
   const now = new Date();
   const time = clockFormat.format(now);
   const hour = Number(time.slice(0,2));
-  const theme = themePicker.value === 'auto' ? themeForHour(hour) : themePicker.value;
+  const theme = themePicker.value === 'auto' ? automaticSky(hour, now.getTime(), weatherReading) : themePicker.value;
   if (document.body.dataset.theme !== theme) document.body.dataset.theme = theme;
+  const caption = byId('sky-caption');
+  if (caption.textContent !== skyNames[theme]) caption.textContent = skyNames[theme];
   byId('clock').textContent = time;
   byId('clock').dateTime = time + '+09:00';
   byId('date').textContent = dateFormat.format(now);
@@ -226,6 +275,8 @@ async function updateWeather(){
     const values = [current.weather_code,current.temperature_2m,daily.temperature_2m_max[0],daily.temperature_2m_min[0]];
     if (!values.every(Number.isFinite)) throw new Error('Incomplete weather');
     const [code,temp,max,min] = values;
+    weatherReading = {code, expiresAt: Date.now() + 30 * 60 * 1000};
+    updateClock();
     byId('condition').textContent = weatherLabel(code);
     byId('temperature').textContent = Math.round(temp) + '℃';
     byId('range').textContent = '最高 ' + Math.round(max) + '℃ ／ 最低 ' + Math.round(min) + '℃';
