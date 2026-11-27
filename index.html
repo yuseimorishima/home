@@ -12,20 +12,20 @@
 :root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;color:#fff7f1;background:#23213e}
 *{box-sizing:border-box}
 body{margin:0;min-height:100svh;isolation:isolate;--sky-top:#674b70;--sky-bottom:#21203a;--glow:#c4808b;--horizon:#a95d67;--orb:#ffd0a4;--orb-x:78%;--orb-y:16%;--stars:0;background:var(--sky-bottom)}
-body[data-theme="day"]{--sky-top:#275780;--sky-bottom:#172b51;--glow:#649eb2;--horizon:#347b8c;--orb:#fff6d1;--orb-x:80%;--orb-y:9%}
-body[data-theme="dusk"]{--sky-top:#493660;--sky-bottom:#231c39;--glow:#a45c82;--horizon:#b66b60;--orb:#ffb379;--orb-x:78%;--orb-y:29%}
-body[data-theme="night"]{--sky-top:#222b55;--sky-bottom:#11162f;--glow:#465382;--horizon:#343464;--orb:#dde4fb;--orb-x:77%;--orb-y:13%;--stars:.7}
+[data-theme="day"]{--sky-top:#275780;--sky-bottom:#172b51;--glow:#649eb2;--horizon:#347b8c;--orb:#fff6d1;--orb-x:80%;--orb-y:9%}
+[data-theme="dusk"]{--sky-top:#493660;--sky-bottom:#231c39;--glow:#a45c82;--horizon:#b66b60;--orb:#ffb379;--orb-x:78%;--orb-y:29%}
+[data-theme="night"]{--sky-top:#222b55;--sky-bottom:#11162f;--glow:#465382;--horizon:#343464;--orb:#dde4fb;--orb-x:77%;--orb-y:13%;--stars:.7}
 .sky{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:radial-gradient(ellipse at var(--orb-x) var(--orb-y),var(--glow),transparent 53%),radial-gradient(ellipse at 15% 61%,var(--horizon),transparent 54%),linear-gradient(165deg,var(--sky-top),var(--sky-bottom) 78%)}
 .sky::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--orb-x) var(--orb-y),var(--orb) 0 24px,transparent 26px);opacity:.68;mask-image:linear-gradient(#000,transparent 65%)}
 .sky::after{content:"";position:absolute;inset:0;opacity:var(--stars);background:radial-gradient(circle at 12% 18%,#fff 0 1px,transparent 2px),radial-gradient(circle at 27% 7%,#fff 0 1px,transparent 2px),radial-gradient(circle at 59% 17%,#fff 0 1px,transparent 2px),radial-gradient(circle at 86% 23%,#fff 0 1px,transparent 2px),radial-gradient(circle at 93% 8%,#fff 0 1px,transparent 2px)}
-body[data-theme="gold-dawn"]{--sky-top:#664e63;--sky-bottom:#2e2235;--glow:#d89977;--horizon:#b77c66;--orb:#ffe6ac;--orb-x:27%;--orb-y:22%}
-body[data-theme="sea-day"]{--sky-top:#225c67;--sky-bottom:#132e49;--glow:#5a9f98;--horizon:#358996;--orb:#fff4d2;--orb-x:66%;--orb-y:10%}
-body[data-theme="violet-dusk"]{--sky-top:#4b365f;--sky-bottom:#201c3d;--glow:#9770b1;--horizon:#ac637e;--orb:#ffd0aa;--orb-x:30%;--orb-y:32%}
-body[data-theme="indigo-night"]{--sky-top:#30365b;--sky-bottom:#14182e;--glow:#6c528c;--horizon:#385f80;--orb:#e6dcfa;--orb-x:25%;--orb-y:14%;--stars:.85}
-body[data-theme="rain"]{--sky-top:#384562;--sky-bottom:#171f38;--glow:#6e7d9a;--horizon:#3c5975}
-body[data-theme="fog"]{--sky-top:#545b73;--sky-bottom:#2a304a;--glow:#9193aa;--horizon:#67748c}
-body[data-theme="snow"]{--sky-top:#48637f;--sky-bottom:#263553;--glow:#8ea9c5;--horizon:#7086a2}
-body[data-theme="storm"]{--sky-top:#35294d;--sky-bottom:#18152e;--glow:#7d659c;--horizon:#4e416f}
+[data-theme="gold-dawn"]{--sky-top:#664e63;--sky-bottom:#2e2235;--glow:#d89977;--horizon:#b77c66;--orb:#ffe6ac;--orb-x:27%;--orb-y:22%}
+[data-theme="sea-day"]{--sky-top:#225c67;--sky-bottom:#132e49;--glow:#5a9f98;--horizon:#358996;--orb:#fff4d2;--orb-x:66%;--orb-y:10%}
+[data-theme="violet-dusk"]{--sky-top:#4b365f;--sky-bottom:#201c3d;--glow:#9770b1;--horizon:#ac637e;--orb:#ffd0aa;--orb-x:30%;--orb-y:32%}
+[data-theme="indigo-night"]{--sky-top:#30365b;--sky-bottom:#14182e;--glow:#6c528c;--horizon:#385f80;--orb:#e6dcfa;--orb-x:25%;--orb-y:14%;--stars:.85}
+[data-theme="rain"]{--sky-top:#384562;--sky-bottom:#171f38;--glow:#6e7d9a;--horizon:#3c5975}
+[data-theme="fog"]{--sky-top:#545b73;--sky-bottom:#2a304a;--glow:#9193aa;--horizon:#67748c}
+[data-theme="snow"]{--sky-top:#48637f;--sky-bottom:#263553;--glow:#8ea9c5;--horizon:#7086a2}
+[data-theme="storm"]{--sky-top:#35294d;--sky-bottom:#18152e;--glow:#7d659c;--horizon:#4e416f}
 :is([data-theme="rain"],[data-theme="fog"],[data-theme="snow"],[data-theme="storm"]) .sky::before{background:none}
 :is([data-theme="rain"],[data-theme="storm"]) .sky::after{opacity:.25;background:repeating-linear-gradient(112deg,transparent 0 20px,#dbe9ff55 21px,transparent 23px 40px);mask-image:linear-gradient(#000,transparent 85%)}
 [data-theme="storm"] .sky::before{background:radial-gradient(ellipse at 72% 24%,#c9a5ff88,transparent 36%);mask-image:none}
@@ -68,6 +68,23 @@ a{display:grid;place-items:center;background:#ffffff15;border:1px solid #ffffff2
 #storage-status{font-size:13px;margin:8px 0 0}
 .credit{text-align:right;color:#dfcad6;font-size:11px;margin:10px 0 0}
 .credit a{display:inline;min-height:0;border:0;background:none;font-size:inherit;text-decoration:underline}
+header .brand{margin-right:auto}
+#open-atlas{background:#221e38d9;color:inherit;border:1px solid #ffffff45}
+#atlas{width:min(calc(100% - 28px),470px);max-height:85svh;overflow:auto;border:1px solid #ffffff45;border-radius:24px;padding:18px;background:#201e35;color:inherit}
+#atlas::backdrop{background:#110d23b5}
+.atlas-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.atlas-header h2{font-size:20px}
+#atlas-progress{margin:8px 0;font-weight:650}
+#atlas-help{margin:0 0 12px;color:#ebdce6;font-size:13px}
+#atlas-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;list-style:none;padding:0;margin:0}
+.atlas-entry{border:1px solid #ffffff33;border-radius:14px;overflow:hidden;background:#ffffff0c}
+.atlas-swatch{height:65px;position:relative;isolation:isolate;display:grid;place-items:center;background:linear-gradient(135deg,#4b4164,#292640);color:#e6d8ed}
+.atlas-swatch .sky{position:absolute}
+.atlas-swatch .sky::before{background-size:auto}
+.atlas-label{padding:8px;font-size:13px}
+.atlas-label strong{display:block}
+.atlas-label small{color:#ffddcb}
+@media(max-width:360px){header{gap:6px}.theme-control{gap:4px}#open-atlas{padding-inline:9px}}
 </style>
 </head>
 <body data-theme="dawn">
@@ -75,6 +92,7 @@ a{display:grid;place-items:center;background:#ffffff15;border:1px solid #ffffff2
 <main>
 <header>
   <span class="brand">一日</span>
+  <button id="open-atlas" type="button">図鑑</button>
   <label class="theme-control">背景
     <select id="theme">
       <option value="auto">自動</option>
@@ -116,6 +134,15 @@ a{display:grid;place-items:center;background:#ffffff15;border:1px solid #ffffff2
 </nav>
 <p class="credit">天気データ提供 <a href="https://open-meteo.com/">Open-Meteo</a></p>
 </main>
+<dialog id="atlas" aria-labelledby="atlas-title" aria-describedby="atlas-help">
+  <div class="atlas-header">
+    <h2 id="atlas-title">空の図鑑</h2>
+    <form method="dialog"><button type="submit">閉じる</button></form>
+  </div>
+  <p id="atlas-progress"></p>
+  <p id="atlas-help">背景を「自動」にして、時間や天気で現れた空を集めよう。</p>
+  <ul id="atlas-list"></ul>
+</dialog>
 <script>
 const byId = id => document.getElementById(id);
 const zone = 'Asia/Tokyo';
@@ -155,6 +182,67 @@ const skyNames = {
   night:'月と星', 'indigo-night':'藍色の星空',
   rain:'雨の空', fog:'霧の空', snow:'雪の空', storm:'雷雲の空'
 };
+const rarity = {
+  rain:'レア', fog:'スーパーレア', snow:'スーパーレア', storm:'ウルトラレア'
+};
+const atlasIds = [...Object.values(skies).flat(), ...Object.keys(rarity)];
+const atlasKey = 'home-sky-atlas';
+const atlas = byId('atlas');
+const foundSkies = new Set();
+try {
+  const savedSkies = JSON.parse(localStorage.getItem(atlasKey));
+  if (Array.isArray(savedSkies)) {
+    savedSkies.filter(id => atlasIds.includes(id)).forEach(id => foundSkies.add(id));
+  }
+} catch {
+  // Discoveries remain available for the current visit.
+}
+
+function renderAtlas(){
+  byId('atlas-progress').textContent = foundSkies.size + ' / ' + atlasIds.length + ' 種類発見';
+  byId('atlas-list').replaceChildren(...atlasIds.map(id => {
+    const found = foundSkies.has(id);
+    const entry = document.createElement('li');
+    entry.className = 'atlas-entry';
+    const swatch = document.createElement('div');
+    swatch.className = 'atlas-swatch';
+    swatch.setAttribute('aria-hidden','true');
+    if (found) {
+      swatch.dataset.theme = id;
+      const sky = document.createElement('div');
+      sky.className = 'sky';
+      swatch.append(sky);
+    } else {
+      swatch.textContent = '？';
+    }
+    const label = document.createElement('div');
+    label.className = 'atlas-label';
+    const name = document.createElement('strong');
+    name.textContent = found ? skyNames[id] : '未発見';
+    const grade = document.createElement('small');
+    grade.textContent = rarity[id] ?? 'ノーマル';
+    label.append(name,grade);
+    entry.append(swatch,label);
+    return entry;
+  }));
+}
+
+function discoverSky(id){
+  if (foundSkies.has(id)) return;
+  foundSkies.add(id);
+  try {
+    localStorage.setItem(atlasKey, JSON.stringify([...foundSkies]));
+  } catch {
+    // Discoveries remain available for the current visit.
+  }
+  if (atlas.open) renderAtlas();
+}
+
+byId('open-atlas').addEventListener('click', () => {
+  renderAtlas();
+  atlas.showModal();
+});
+
 let weatherReading = null;
 
 function timeBand(hour){
@@ -223,6 +311,7 @@ function updateClock(){
   const hour = Number(time.slice(0,2));
   const theme = themePicker.value === 'auto' ? automaticSky(hour, now.getTime(), weatherReading) : themePicker.value;
   if (document.body.dataset.theme !== theme) document.body.dataset.theme = theme;
+  if (themePicker.value === 'auto') discoverSky(theme);
   const caption = byId('sky-caption');
   if (caption.textContent !== skyNames[theme]) caption.textContent = skyNames[theme];
   byId('clock').textContent = time;
@@ -242,7 +331,7 @@ function updateClock(){
   showEvents();
 }
 
-document.querySelector('form').addEventListener('submit',event=>{
+byId('event').form.addEventListener('submit',event=>{
   event.preventDefault();
   updateClock();
   const input = byId('event');
