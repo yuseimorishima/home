@@ -11,9 +11,22 @@
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;color:#fff7f1;background:#23213e}
 *{box-sizing:border-box}
-body{margin:0;min-height:100svh;background:radial-gradient(ellipse at 78% 2%,#ad6977 0,transparent 53%),linear-gradient(170deg,#433657,#25233d 58%,#191b31);background-attachment:fixed}
+body{margin:0;min-height:100svh;isolation:isolate;--sky-top:#674b70;--sky-bottom:#21203a;--glow:#c4808b;--horizon:#a95d67;--orb:#ffd0a4;--orb-x:78%;--orb-y:16%;--stars:0;background:var(--sky-bottom)}
+body[data-theme="day"]{--sky-top:#275780;--sky-bottom:#172b51;--glow:#649eb2;--horizon:#347b8c;--orb:#fff6d1;--orb-x:80%;--orb-y:9%}
+body[data-theme="dusk"]{--sky-top:#493660;--sky-bottom:#231c39;--glow:#a45c82;--horizon:#b66b60;--orb:#ffb379;--orb-x:78%;--orb-y:29%}
+body[data-theme="night"]{--sky-top:#222b55;--sky-bottom:#11162f;--glow:#465382;--horizon:#343464;--orb:#dde4fb;--orb-x:77%;--orb-y:13%;--stars:.7}
+.sky{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:radial-gradient(ellipse at var(--orb-x) var(--orb-y),var(--glow),transparent 53%),radial-gradient(ellipse at 15% 61%,var(--horizon),transparent 54%),linear-gradient(165deg,var(--sky-top),var(--sky-bottom) 78%)}
+.sky::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--orb-x) var(--orb-y),var(--orb) 0 24px,transparent 26px);opacity:.68;mask-image:linear-gradient(#000,transparent 65%)}
+.sky::after{content:"";position:absolute;inset:0;opacity:var(--stars);background:radial-gradient(circle at 12% 18%,#fff 0 1px,transparent 2px),radial-gradient(circle at 27% 7%,#fff 0 1px,transparent 2px),radial-gradient(circle at 59% 17%,#fff 0 1px,transparent 2px),radial-gradient(circle at 86% 23%,#fff 0 1px,transparent 2px),radial-gradient(circle at 93% 8%,#fff 0 1px,transparent 2px)}
+main{position:relative}
+.hero{text-shadow:0 2px 14px #17142c}
+
 main{width:min(100%,480px);margin:auto;padding:max(28px,env(safe-area-inset-top)) 22px max(28px,env(safe-area-inset-bottom))}
-header{font-size:18px;font-weight:650;letter-spacing:.18em}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-size:18px;font-weight:650;letter-spacing:.18em}
+.theme-control{display:flex;align-items:center;gap:7px;font-size:13px}
+.theme-control select{min-height:44px;padding:0 10px;border:1px solid #ffffff45;border-radius:12px;background:#221e38d9;color:inherit;font:inherit;font-size:16px}
+.theme-control select:focus-visible{outline:2px solid #ffcfb6;outline-offset:2px}
 .hero{padding:38px 0 28px;text-align:center}
 #date{font-size:16px;letter-spacing:.06em}
 #clock{font-size:clamp(76px,23vw,114px);font-weight:300;line-height:1.08;letter-spacing:-.07em;font-variant-numeric:tabular-nums;margin:4px 0 7px;display:block}
@@ -42,9 +55,21 @@ a{display:grid;place-items:center;background:#ffffff15;border:1px solid #ffffff2
 .credit a{display:inline;min-height:0;border:0;background:none;font-size:inherit;text-decoration:underline}
 </style>
 </head>
-<body>
+<body data-theme="dawn">
+<div class="sky" aria-hidden="true"></div>
 <main>
-<header>一日</header>
+<header>
+  <span class="brand">一日</span>
+  <label class="theme-control">背景
+    <select id="theme">
+      <option value="auto">自動</option>
+      <option value="dawn">朝焼け</option>
+      <option value="day">昼の空</option>
+      <option value="dusk">夕焼け</option>
+      <option value="night">星空</option>
+    </select>
+  </label>
+</header>
 <section class="hero" aria-label="日付と時刻">
   <div id="date"></div>
   <time id="clock"></time>
@@ -82,6 +107,32 @@ const dateFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,month:'long',d
 const clockFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 const dayFormat = new Intl.DateTimeFormat('ja-JP',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});
 const storageKey = 'home-schedule';
+const themePicker = byId('theme');
+const themeStorageKey = 'home-theme';
+try {
+  const savedTheme = localStorage.getItem(themeStorageKey);
+  if (Array.from(themePicker.options).some(option => option.value === savedTheme)) {
+    themePicker.value = savedTheme;
+  }
+} catch {
+  // The picker still works for the current visit.
+}
+themePicker.addEventListener('change', () => {
+  try {
+    localStorage.setItem(themeStorageKey, themePicker.value);
+  } catch {
+    // Keep the selection for the current visit.
+  }
+  updateClock();
+});
+
+function themeForHour(hour){
+  if (hour >= 5 && hour < 10) return 'dawn';
+  if (hour >= 10 && hour < 16) return 'day';
+  if (hour >= 16 && hour < 19) return 'dusk';
+  return 'night';
+}
+
 let day = '';
 let events = [];
 
@@ -123,6 +174,8 @@ function updateClock(){
   const now = new Date();
   const time = clockFormat.format(now);
   const hour = Number(time.slice(0,2));
+  const theme = themePicker.value === 'auto' ? themeForHour(hour) : themePicker.value;
+  if (document.body.dataset.theme !== theme) document.body.dataset.theme = theme;
   byId('clock').textContent = time;
   byId('clock').dateTime = time + '+09:00';
   byId('date').textContent = dateFormat.format(now);
